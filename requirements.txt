@@ -1,0 +1,52 @@
+# ===== Agent 框架 =====
+# LangGraph: 构建有状态的 Agent 工作流（核心！）
+# 类比：流程图引擎 — 控制 "先做什么、后做什么、失败了怎么办"
+langgraph>=1.2.0
+
+# LangChain: 提供 LLM 调用和 Tool 定义的标准接口
+# 类比：工具箱 — 标准化地调用 LLM、定义工具、管理 Prompt
+langchain>=1.3.0
+langchain-core>=1.4.0
+
+# ===== LLM 调用 =====
+# OpenAI SDK: 调用 LLM 的客户端（兼容 DeepSeek/Qwen 等任何 OpenAI 格式的 API）
+# 类比：遥控器 — 你不需要知道电视内部怎么运作，按按钮就行
+openai>=2.0.0
+
+# ===== 向量数据库 =====
+# Chroma: 轻量级向量数据库，实现语义搜索
+# 类比：不是按关键词匹配，而是按 "意思相近" 来搜索
+# 比如搜 "AI 改变世界" 能找到 "人工智能重塑社会"（意思相同但用词不同）
+chromadb>=0.5.0
+
+# ===== 内容抓取 =====
+# httpx: 现代异步 HTTP 客户端
+# 类比：比 requests 更先进，支持异步（边等边干别的）
+httpx>=0.28.0
+
+# BeautifulSoup: HTML 解析库
+# 类比：把一个网页的 HTML 转成你能提取正文的结构化对象
+beautifulsoup4>=4.12.0
+
+# readability-lxml: 自动从网页中提取正文内容
+# 类比：自动识别 "哪些是正文、哪些是广告/导航/侧边栏"
+readability-lxml>=0.8.0
+
+# ===== Telegram Bot =====
+# python-telegram-bot: Telegram Bot API 封装
+# 类比：不用自己处理 Telegram 的网络协议，调函数就行
+python-telegram-bot>=21.0
+
+# ===== 配置与工具 =====
+# python-dotenv: 从 .env 文件加载环境变量
+# 类比：把密码、Token 写在单独文件里，不暴露在代码中
+python-dotenv>=1.0.0
+
+# PyYAML: 读取 YAML 配置文件
+pyyaml>=6.0
+
+# ===== 测试 =====
+# pytest: Python 最流行的测试框架
+pytest>=8.0.0
+# pytest-asyncio: 让 pytest 支持异步测试
+pytest-asyncio>=0.24.0

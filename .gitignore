@@ -1,0 +1,21 @@
+# 敏感信息 — 绝对不要提交！
+.env
+
+# 本地数据 — 每个人自己的
+data/
+
+# Python 自动生成 — 没用
+__pycache__/
+*.pyc
+*.pyo
+
+# 测试
+.pytest_cache/
+
+# 虚拟环境
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
