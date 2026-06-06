@@ -19,6 +19,10 @@ openai>=2.0.0
 # 比如搜 "AI 改变世界" 能找到 "人工智能重塑社会"（意思相同但用词不同）
 chromadb>=0.5.0
 
+# ===== 本地 Embedding 模型 =====
+# sentence-transformers: 本地运行 Embedding 模型，免费离线可用
+sentence-transformers>=5.0.0
+
 # ===== 内容抓取 =====
 # httpx: 现代异步 HTTP 客户端
 # 类比：比 requests 更先进，支持异步（边等边干别的）
