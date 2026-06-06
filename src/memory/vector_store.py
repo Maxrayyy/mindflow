@@ -38,7 +38,7 @@ class VectorStore:
         """向量化文章并存入 Chroma"""
         text = f"{title}\n\n{content}"[:8000]  # 限制长度
         embedding = get_embedding(text)
-
+        # 不接受空的 metadata，至少要有来源信息
         safe_meta = {"source": "mindflow"}
         if metadata:
             safe_meta.update(metadata)
