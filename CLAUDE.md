@@ -51,6 +51,11 @@ docs/superpowers/
 | Embedding 模型 | text-embedding-3-small | **本地 sentence-transformers** | DeepSeek 不提供 Embedding API |
 | Bot 平台 | Telegram（暂定） | **Telegram** | 微信个人号不可行 |
 
+## Git 操作规范
+
+- `git push` 等待超过 **15 秒** → 停止等待，提示用户手动执行 `git push origin main`
+- 避免 push 超时浪费用户时间
+
 ## 提交规范
 
 - 提交信息用中文或英文皆可
