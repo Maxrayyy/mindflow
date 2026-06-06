@@ -4,24 +4,20 @@ LLM 客户端封装 — 统一调用 DeepSeek（或其他 OpenAI 兼容 API）�
 三个核心能力：
   1. chat()           → 普通对话，返回文本
   2. function_call()  → 让 LLM 按你规定的 JSON 结构返回数据（Agent 的基石！）
-  3. get_embedding()  → 把文本变成数字向量（用于语义搜索）
+  3. get_embedding()  → 把文本变成数字向量（本地 sentence-transformers 模型）
 
-依赖：
-  openai 这个包（OpenAI SDK）能直接调 DeepSeek，因为 DeepSeek 的 API 格式
-  和 OpenAI 完全一样 — 只需改 base_url 就行。
-
-  类比：你换了一个遥控器品牌，但按钮和红外码完全一样，所以不用重学。
+为什么 Embedding 用本地模型而不是 API？
+  DeepSeek 不提供 Embedding API。用本地 BGE 模型，零成本、离线可用。
 """
 from openai import OpenAI
 from src.config import settings
 
-# 全局单例 — 整个应用只创建一个 OpenAI 客户端
-# 为什么是单例？避免每次调用都重新创建连接（浪费资源）
+# 全局单例
 _client: OpenAI | None = None
+_embedding_model = None  # 惰性加载
 
 
 def get_client() -> OpenAI:
-    """获取全局 LLM 客户端单例"""
     global _client
     if _client is None:
         _client = OpenAI(
@@ -29,6 +25,20 @@ def get_client() -> OpenAI:
             base_url=settings.llm.base_url,
         )
     return _client
+
+
+def get_embedding(text: str, model: str | None = None) -> list[float]:
+    """获取文本的向量嵌入（本地 BGE 模型）。
+
+    首次调用会自动加载模型到内存（~100MB），之后复用。
+    """
+    global _embedding_model
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer("BAAI/bge-small-zh-v1.5")
+
+    vector = _embedding_model.encode(text, normalize_embeddings=True)
+    return vector.tolist()
 
 
 def chat(
@@ -120,26 +130,3 @@ def function_call(
     )
 
 
-def get_embedding(text: str, model: str | None = None) -> list[float]:
-    """获取文本的向量嵌入（embedding）。
-
-    把一段文字变成一串数字（向量），相似的文字在向量空间中距离更近。
-    这是语义搜索的基础。
-
-    Args:
-        text:  要向量化的文本
-        model: embedding 模型名
-
-    Returns:
-        浮点数列表，如 [0.023, -0.451, ...]
-
-    注意:
-        DeepSeek 不提供 Embedding API，所以我们后面会改用本地模型。
-        这里先保留接口，Task 6 时替换实现。
-    """
-    client = get_client()
-    response = client.embeddings.create(
-        model=model or settings.llm.embedding_model,
-        input=text,
-    )
-    return response.data[0].embedding
