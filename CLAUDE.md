@@ -41,7 +41,9 @@ docs/superpowers/
   - [x] Task 4: 知乎 & 公众号解析器
   - [x] Task 5: 通用解析器（兜底方案）
   - [x] Task 6: 记忆系统（向量存储 + 元数据存储）
-  - [ ] Task 7: Function Calling Tools（观点提取 + 标签生成） ← 当前
+  - [x] Task 7: Function Calling Tools（观点提取 + 标签生成）
+  - [x] Task 8: LangGraph Digest Agent（状态 + 节点 + 图）
+  - [ ] Task 9: Telegram Bot ← 当前
 
 ## 已做出的技术决策（与原始规格的不同之处）
 

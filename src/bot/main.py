@@ -1,0 +1,49 @@
+"""MindFlow Telegram Bot 入口。
+
+启动方式:
+    python -m src.bot.main
+
+前置条件:
+    1. .env 中已配置 TELEGRAM_BOT_TOKEN（从 @BotFather 获取）
+    2. .env 中已配置 OPENAI_API_KEY 和 OPENAI_BASE_URL
+    3. 网络能访问 Telegram API（国内可能需要代理）
+"""
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from src.config import settings
+from src.bot.handlers import (
+    start_command,
+    help_command,
+    stats_command,
+    handle_message,
+)
+
+
+def main() -> None:
+    """启动 Telegram Bot"""
+    print("🤖 MindFlow Bot 正在启动...")
+    print(f"📊 LLM 模型: {settings.llm.model}")
+    print(f"💾 数据目录: {settings.storage.data_dir}")
+
+    if not settings.bot.token:
+        print("❌ 未配置 TELEGRAM_BOT_TOKEN，请在 .env 中设置后重试")
+        return
+
+    # Application 是 Bot 的核心 — 管理事件循环和处理器分发
+    app = Application.builder().token(settings.bot.token).build()
+
+    # 注册命令处理器 — 精确匹配 /start、/help、/stats
+    app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("stats", stats_command))
+
+    # 注册消息处理器 — 匹配所有非命令的文本消息
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("✅ Bot 已启动，等待消息...")
+    # run_polling 开始轮询 Telegram 服务器，收到消息自动分发给对应处理器
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
+
+
+if __name__ == "__main__":
+    main()
