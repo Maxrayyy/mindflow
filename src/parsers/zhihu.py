@@ -2,13 +2,35 @@
 知乎解析器 — 支持知乎问答页面和专栏文章。
 
 技术要点：
-  1. httpx.AsyncClient — 异步发 HTTP 请求（不阻塞，等网页回来时可以干别的）
+  1. httpx.AsyncClient — 异步发 HTTP 请求
   2. BeautifulSoup — 解析 HTML，用 CSS 选择器定位内容区域
   3. User-Agent 伪装 — 告诉知乎"我是浏览器"，否则会被拒绝访问
+  4. 走 Clash 代理 — WSL2 网络被 TUN 劫持，走代理才能用 Clash 的直连规则
 """
+import os
+import subprocess
 import httpx
 from bs4 import BeautifulSoup
 from src.parsers.base import BaseParser, ParsedArticle, ParseError
+
+
+def _get_proxy() -> str | None:
+    """解析 TELEGRAM_PROXY 环境变量，支持 auto 模式自动检测 WSL2 网关。"""
+    proxy_url = os.getenv("TELEGRAM_PROXY", "")
+    if not proxy_url:
+        return None
+    if proxy_url == "auto":
+        try:
+            result = subprocess.run(
+                ["ip", "route", "show", "default"],
+                capture_output=True, text=True, timeout=5,
+            )
+            for part in result.stdout.split():
+                if part.count(".") == 3:
+                    return f"http://{part}:7897"
+        except Exception:
+            pass
+    return proxy_url
 
 
 class ZhihuParser(BaseParser):
@@ -20,19 +42,33 @@ class ZhihuParser(BaseParser):
 
     async def parse(self, url: str) -> ParsedArticle:
         try:
-            # 第 1 步：发 HTTP 请求，获取网页 HTML
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            # 走 Clash 代理 — Clash 里配 zhihu.com → DIRECT 就能用国内 IP 访问
+            async with httpx.AsyncClient(timeout=15.0, proxy=_get_proxy()) as client:
                 response = await client.get(
                     url,
                     headers={
-                        # User-Agent = 告诉服务器"我是 Chrome 浏览器"
-                        # 不加这句话，知乎会返回一堆乱码甚至拒绝访问
                         "User-Agent": (
                             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                             "AppleWebKit/537.36 (KHTML, like Gecko) "
                             "Chrome/120.0.0.0 Safari/537.36"
                         ),
-                        "Accept": "text/html,application/xhtml+xml",
+                        "Accept": (
+                            "text/html,application/xhtml+xml,application/xml;"
+                            "q=0.9,image/webp,*/*;q=0.8"
+                        ),
+                        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+                        "Accept-Encoding": "gzip, deflate, br",
+                        "Cache-Control": "no-cache",
+                        "Sec-Ch-Ua": (
+                            '"Not_A Brand";v="8", "Chromium";v="120", '
+                            '"Google Chrome";v="120"'
+                        ),
+                        "Sec-Ch-Ua-Mobile": "?0",
+                        "Sec-Ch-Ua-Platform": '"Windows"',
+                        "Sec-Fetch-Dest": "document",
+                        "Sec-Fetch-Mode": "navigate",
+                        "Sec-Fetch-Site": "none",
+                        "Sec-Fetch-User": "?1",
                     },
                     follow_redirects=True,  # 如果链接跳转，自动跟随
                 )
