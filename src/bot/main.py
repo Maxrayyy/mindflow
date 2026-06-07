@@ -6,10 +6,12 @@
 前置条件:
     1. .env 中已配置 TELEGRAM_BOT_TOKEN（从 @BotFather 获取）
     2. .env 中已配置 OPENAI_API_KEY 和 OPENAI_BASE_URL
-    3. 网络能访问 Telegram API（国内可能需要代理，
-       在 .env 中设置 TELEGRAM_PROXY=http://127.0.0.1:7890）
+    3. 网络能访问 Telegram API（国内需要代理）：
+       - TELEGRAM_PROXY=auto           → 自动检测 WSL2 网关 + Clash 端口
+       - TELEGRAM_PROXY=http://x:x:7890 → 手动指定代理地址
 """
 import os
+import subprocess
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.request import HTTPXRequest
@@ -20,6 +22,39 @@ from src.bot.handlers import (
     stats_command,
     handle_message,
 )
+
+
+def _detect_proxy() -> str | None:
+    """自动检测代理地址。
+
+    支持两种模式：
+      1. TELEGRAM_PROXY=auto — WSL2 下自动找 Windows 主机的 Clash 代理
+      2. TELEGRAM_PROXY=http://... — 直接用指定的地址
+    """
+    proxy_url = os.getenv("TELEGRAM_PROXY", "")
+    if not proxy_url:
+        return None
+
+    if proxy_url == "auto":
+        # WSL2: 通过 ip route 获取 Windows 主机 IP
+        try:
+            result = subprocess.run(
+                ["ip", "route", "show", "default"],
+                capture_output=True, text=True, timeout=5,
+            )
+            for part in result.stdout.split():
+                if part.count(".") == 3 and part.split(".")[0] in ("172", "192", "10"):
+                    gateway = part
+                    url = f"http://{gateway}:7897"
+                    print(f"🔗 自动检测代理: {url}")
+                    return url
+        except Exception:
+            pass
+    else:
+        print(f"🔗 使用代理: {proxy_url}")
+        return proxy_url
+
+    return None
 
 
 def main() -> None:
@@ -33,12 +68,8 @@ def main() -> None:
         return
 
     # 代理配置 — 国内访问 Telegram API 需要
-    proxy_url = os.getenv("TELEGRAM_PROXY", "")
-    if proxy_url:
-        print(f"🔗 使用代理: {proxy_url}")
-        request = HTTPXRequest(proxy=proxy_url)
-    else:
-        request = None
+    proxy_url = _detect_proxy()
+    request = HTTPXRequest(proxy=proxy_url) if proxy_url else None
 
     # Application 是 Bot 的核心 — 管理事件循环和处理器分发
     app = Application.builder().token(settings.bot.token).request(request).build()
