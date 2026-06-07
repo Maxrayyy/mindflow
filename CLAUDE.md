@@ -43,7 +43,8 @@ docs/superpowers/
   - [x] Task 6: 记忆系统（向量存储 + 元数据存储）
   - [x] Task 7: Function Calling Tools（观点提取 + 标签生成）
   - [x] Task 8: LangGraph Digest Agent（状态 + 节点 + 图）
-  - [ ] Task 9: Telegram Bot ← 当前
+  - [x] Task 9: Telegram Bot
+  - [x] Task 10: 集成验证与 README（Phase 1 完成 ✅）
 
 ## 已做出的技术决策（与原始规格的不同之处）
 
