@@ -6,10 +6,13 @@
 前置条件:
     1. .env 中已配置 TELEGRAM_BOT_TOKEN（从 @BotFather 获取）
     2. .env 中已配置 OPENAI_API_KEY 和 OPENAI_BASE_URL
-    3. 网络能访问 Telegram API（国内可能需要代理）
+    3. 网络能访问 Telegram API（国内可能需要代理，
+       在 .env 中设置 TELEGRAM_PROXY=http://127.0.0.1:7890）
 """
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.request import HTTPXRequest
 from src.config import settings
 from src.bot.handlers import (
     start_command,
@@ -29,8 +32,16 @@ def main() -> None:
         print("❌ 未配置 TELEGRAM_BOT_TOKEN，请在 .env 中设置后重试")
         return
 
+    # 代理配置 — 国内访问 Telegram API 需要
+    proxy_url = os.getenv("TELEGRAM_PROXY", "")
+    if proxy_url:
+        print(f"🔗 使用代理: {proxy_url}")
+        request = HTTPXRequest(proxy=proxy_url)
+    else:
+        request = None
+
     # Application 是 Bot 的核心 — 管理事件循环和处理器分发
-    app = Application.builder().token(settings.bot.token).build()
+    app = Application.builder().token(settings.bot.token).request(request).build()
 
     # 注册命令处理器 — 精确匹配 /start、/help、/stats
     app.add_handler(CommandHandler("start", start_command))
